@@ -36,6 +36,8 @@ void T_linha();
 
 int main();
 
+void erro( const char* msg );
+
 %}
 
 D	[0-9]
@@ -154,6 +156,11 @@ a a @ 1 + =
 
 */
 
+void erro( string msg ) {
+  cout << "Erro: Funcao não definida:" << msg << endl;
+  exit( 1 );
+}
+
 int next_token() {
   return yylex();
 }
@@ -188,6 +195,8 @@ void F() {
         E(); 
         casa( ')' ); 
         break;
+    default:
+      erro (lexema);
   }
 }
 
