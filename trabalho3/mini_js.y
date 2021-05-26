@@ -34,6 +34,7 @@ vector<string> novo;
 
 %start S
 
+
 %%
 
 S   :   CMDs { imprime( resolve_enderecos($1.c)); }
@@ -94,9 +95,9 @@ void yyerror( const char* st ) {
     printf( "Proximo a: %s\n", yytext );
 }
 
-vector<string> concatena(vector<string> a, vector<string> b) {
-    a.insert( a.end(), b.begin(), b.end() );
-    return a;
+vector<string> concatena( vector<string> a, vector<string> b ) {
+  a.insert( a.end(), b.begin(), b.end() );
+  return a;
 }
 
 vector<string> operator+( vector<string> a, vector<string> b) {
@@ -109,28 +110,24 @@ vector<string> operator+( vector<string> a, string b) {
 }
 
 string gera_label( string prefixo ) {
-    static int n = 0;
-    return prefixo + "_" + to_string ( ++n ) + ":";
+  static int n = 0;
+  return prefixo + "_" + to_string( ++n ) + ":";
 }
 
 vector<string> resolve_enderecos( vector<string> entrada ) {
-    map<string, int> label;
-    vector<string> saida;
-    for( int i = 0; i < entrada.size(); i++ ){
-        if(entrada[i][0] == ':' )
-            label[entrada[i].substr(1)] = saida.size();
-        else
-            saida.push_back( entrada[i] );
-        
-    }
+  map<string,int> label;
+  vector<string> saida;
+  for( int i = 0; i < entrada.size(); i++ ) 
+    if( entrada[i][0] == ':' ) 
+        label[entrada[i].substr(1)] = saida.size();
+    else
+      saida.push_back( entrada[i] );
+  
+  for( int i = 0; i < saida.size(); i++ ) 
+    if( label.count( saida[i] ) > 0 )
+        saida[i] = to_string(label[saida[i]]);
     
-    for( int i = 0; i < saida.size(); i++ ) {
-        if( label.count( saida[i] ) > 0 ) {
-            saida[i] = to_string(label[saida[i]]);
-        }
-    }
-    
-    return saida;
+  return saida;
 }
 
 void imprime( vector<string> codigo ) {
