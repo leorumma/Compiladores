@@ -4,12 +4,14 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <map>
 
 using namespace std;
 
 struct Atributos {
     vector<string> c;
+    int l;
 };
 
 #define  YYSTYPE Atributos
@@ -21,29 +23,31 @@ void yyerror(const char *);
 vector<string> concatena( vector<string> a, vector<string> b);
 vector<string> operator+( vector<string> a, vector<string> b);
 vector<string> operator+( vector<string> a, string b);
+vector<string> operator+( string a, vector<string> b);
 
 string gera_label( string prefixo );
-vector<string> resolve_enderecos( vector<string> entrada );
+
 void imprime( vector<string> codigo);
+vector<string> resolve_enderecos( vector<string> entrada );
 
 vector<string> novo;
 
+int linha = 1, coluna = 1;
+int token(int tk);
+
+void generate_var(Atributos var);
+void check_var(Atributos var);
+map<string, int> vars;
+
 %}
 
-%token NUM ID LET STR IF ELSE WHILE FOR NEG MAIOR_IGUAL MENOR_IGUAL IGUAL DIFERENTE
+%token NUM ID LET STR IF ELSE WHILE FOR NEG MAIOR_IGUAL MENOR_IGUAL IGUAL DIFERENTE ARRAY OBJECT
 
-%right '='
-%nonassoc '<' '>' IGUAL MAIOR_IGUAL MENOR_IGUAL DIFERENTE
-%left '+' '-'
-%left '*' '/' '%'
-%left NEG
-%left '.'
-%left '{'
-%left '['
-%left '('
+%left '>' '<' '+' '-' '*' '/' MAIOR_IGUAL MENOR_IGUAL IGUAL DIFERENTE
+%nonassoc IF ELSE WHILE FOR
 
+//A gramatica vai começar aqui!!
 %start S
-
 
 %%
 
@@ -53,34 +57,45 @@ S   :   CMDs {
     ;
 
 CMDs    :   CMD ';' CMDs {
-                $$.c = $1.c + $3.c; 
+                $$.c = $1.c + $3.c;
             }
 
-        | Sequencia CMDs {
-            $$.c = $1.c + $2.c;
-          }
+        |   FLUXOCOMANDOS CMDs {
+                $$.c = $1.c + $2.c;
+            }
 
-        |   { 
+        |   {
                 $$.c = novo;
             }
         ;
 
-CMD : ATR          { $$.c = $1.c + "^"; }
-    | LET DECLVARs { $$ = $2; }
-    ;
-
-Sequencia :   IF '(' R ')' BODY OPT_ELSE {
-            string then = gera_label("then_if");
-            string end = gera_label("end_if");
-            $$.c = $3.c + "!" + then + "?" + $5.c + end + "#" + (":" + then) + $6.c + (":" + end);
+CMD :   ATRIBUIR {
+            $$.c = $1.c + "^";
         }
 
-    |   WHILE '(' E ')' CMD {
-    	  string end = gera_label("end_while");
-    	  string begin = gera_label("begin_while");
-    	  $$.c = novo + (":" + begin) + $3.c + "!" + end + "?" + $5.c + begin + "#" + (":" + end);
-       }
+    |   LET DECLVARs {
+            $$ = $2;
+        }
     ;
+
+FLUXOCOMANDOS   :   IF '(' R ')' BODY OPT_ELSE {
+                        string then = gera_label("then_if");
+                        string end = gera_label("end_if");
+                        $$.c = $3.c + "!" + then + "?" + $5.c + end + "#" + (":" + then) + $6.c + (":" + end);
+                    }
+
+                |   WHILE '(' E ')' BODY {
+                      string end = gera_label("end_while");
+                      string begin = gera_label("begin_while");
+                      $$.c = novo + (":" + begin) + $3.c + "!" + end + "?" + $5.c + begin + "#" + (":" + end);
+                    }
+
+                |   FOR '(' CMD ';' R ';' ATRIBUIR ')' BODY {
+                       string end = gera_label("end_for");
+                       string begin = gera_label("begin_for");
+                       $$.c = $3.c + (":" + begin) + $5.c + "!" + end + "?" + $9.c + $7.c + "^" + begin + "#" + (":" + end);
+                    }
+                ;
 
 OPT_ELSE : ELSE BODY  { $$ = $2; }
 		 |            { $$.c = novo; }
@@ -88,7 +103,7 @@ OPT_ELSE : ELSE BODY  { $$ = $2; }
 
 BODY : CMD ';'     { $$ = $1; }
 	 | BLOCK
-	 | Sequencia
+	 | FLUXOCOMANDOS
 	 ;
 
 BLOCK : '{' CMDs '}' { $$ = $2; }
@@ -103,18 +118,28 @@ DECLVARs : DECLVAR ',' DECLVARs {
             }
          ;
 
-DECLVAR : ID '=' R {
+DECLVAR : LVALUE '=' R {
+                generate_var($1);
                 $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^";
           }
 
-        | ID {
+        | LVALUE {
+            generate_var($1);
             $$.c = $1.c + "&";
           }
         ;
 
-ATR : ID '=' ATR {$$.c = $1.c + $3.c + "="; }
-    | R     
-    ;
+ATRIBUIR : LVALUE '=' ATRIBUIR {
+                        check_var($1);
+                        $$.c = $1.c + $3.c + "=";
+                      }
+
+         | LVALUEPROP '=' ATRIBUIR {
+                $$.c = $1.c + $3.c + "[=]";
+            }
+
+         | R { $$ = $1; }
+         ;
 
 R   : E '<' E { $$.c = $1.c + $3.c + "<"; }
     | E '>' E { $$.c = $1.c + $3.c + ">"; }
@@ -122,26 +147,34 @@ R   : E '<' E { $$.c = $1.c + $3.c + "<"; }
     | E MENOR_IGUAL E { $$.c = $1.c + $3.c + "<="; }
     | E MAIOR_IGUAL E { $$.c = $1.c + $3.c + ">="; }
     | E DIFERENTE E { $$.c = $1.c + $3.c + "!="; }
-    | E
+    | E { $$ = $1; }
     ;
 
-E   : E '+' T {$$.c = $1.c + $3.c + "+";}
-    | E '-' T {$$.c = $1.c + $3.c + "-";}
-    | T
-    ;
+E : LVALUE '=' E       { $$.c = $1.c + $3.c + "=" ; }
+  | LVALUEPROP '=' E   { $$.c = $1.c + $3.c + "[=]"; }
+  | E '+' E        { $$.c = $1.c + $3.c + "+"; }
+  | E '-' E       { $$.c = $1.c + $3.c + "-"; }
+  | E '*' E        { $$.c = $1.c + $3.c + "*"; }
+  | E '/' E         { $$.c = $1.c + $3.c + "/"; }
+  | '-' E         { $$.c = "0" + $2.c + "-"; }
+  | LVALUE             { $$.c = $1.c + "@"; }
+  | LVALUEPROP         { $$.c = $1.c + "[@]"; }
+  | F                  { $$ = $1; }
+  ;
 
-T   : T '*' F {$$.c = $1.c + $3.c + "*";}
-    | T '/' F {$$.c = $1.c + $3.c + "/";}
-    | T '%' F {$$.c = $1.c + $3.c + "%";}
-    | F
-    ;
+LVALUE : ID
+	   ;
+
+LVALUEPROP : E '[' E ']'    { $$.c = $1.c + $3.c; }
+		   | E '.' ID    { $$.c = $1.c + $3.c; }
+		   ;
 
 F : ID  {$$.c = $1.c + "@"; }
   | NUM {$$.c = $1.c; }
   | STR {$$.c = $1.c; }
   | '(' E ')' {$$ = $2; }
-  | '{' '}' {$$.c = novo + "{}"; }
-  | '[' ']' {$$.c = novo + "[]"; }
+  | OBJECT { $$.c = novo + $1.c; }
+  | ARRAY { $$.c = novo + $1.c; }
   ;
 
 %%
@@ -165,6 +198,29 @@ vector<string> operator+( vector<string> a, vector<string> b) {
 vector<string> operator+( vector<string> a, string b) {
     a.push_back( b );
     return a;
+}
+
+vector<string> operator+( string a, vector<string> b) {
+  vector<string> c;
+  c.push_back(a);
+  return c + b;
+}
+
+void generate_var(Atributos var){
+  if(vars.count(var.c.back()) == 0){
+	vars[var.c.back()] = var.l;
+  }
+  else {
+	cout << "Erro: a variável '" << var.c.back() << "' já foi declarada na linha " << vars[var.c.back()] << "." << endl;
+	exit(1);
+  }
+}
+
+void check_var(Atributos var){
+  if(vars.count(var.c.back()) == 0){
+	cout << "Erro: a variável '" << var.c.back() << "' não foi declarada." << endl;
+	exit(1);
+  }
 }
 
 string gera_label( string prefixo ) {
@@ -195,8 +251,14 @@ void imprime( vector<string> codigo ) {
     cout << "." << endl;
 }
 
+int token(int tk) {
+    yylval.c = novo + yytext;
+    yylval.l = linha;
+    coluna += strlen(yytext);
+    return tk;
+}
+
 int main( int argc, char* argv[] ) {
   yyparse();
-  
   return 0;
 }

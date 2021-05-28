@@ -1,17 +1,24 @@
-DELIM [\t\n ]
 DIGITO	[0-9]
 LETRA	[A-Za-z_]
-DOUBLE {DIGITO}+("."{DIGITO}+)?
+NUM {DIGITO}+("."{DIGITO}+)?
 ID  {LETRA}({LETRA}|{DIGITO})*
 STR  (\"([^"\n]|\"\"|\\\")*\")|('([^'\n]|''|\\')*')
 NEG "!"
 
 %%
 
-{DELIM} {}
+"\t"       { coluna += 4; }
 
-{DOUBLE}    {yylval.c = novo + yytext;
+"\n"       { linha++; coluna = 1; }
+
+" "        { coluna++; }
+
+{NUM}    {yylval.c = novo + yytext;
         return NUM;}
+
+"[]"       { return token(ARRAY); }
+
+"{}"       { return token(OBJECT); }
 
 "let"   {yylval.c = novo + "let";
     return LET;}

@@ -10,7 +10,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac2ec25c-6276-4298-8dfc-60f540979489" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/entrada.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/interpretador" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/lex.yy.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/makefile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/mini_js.l" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/mini_js.y" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/novo/y.tab.c" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/trabalho3/js" beforeDir="false" afterPath="$PROJECT_DIR$/trabalho3/js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trabalho3/lex.yy.c" beforeDir="false" afterPath="$PROJECT_DIR$/trabalho3/lex.yy.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trabalho3/mini_js.l" beforeDir="false" afterPath="$PROJECT_DIR$/trabalho3/mini_js.l" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/trabalho3/mini_js.y" beforeDir="false" afterPath="$PROJECT_DIR$/trabalho3/mini_js.y" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/trabalho3/y.tab.c" beforeDir="false" afterPath="$PROJECT_DIR$/trabalho3/y.tab.c" afterDir="false" />
     </list>
@@ -42,16 +53,6 @@
     <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="RunManager">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="ShConfigurationType">
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
       <option name="SCRIPT_PATH" value="$PROJECT_DIR$/trabalho3/script.sh" />
@@ -90,6 +91,10 @@
       <workItem from="1622158167466" duration="10395000" />
       <workItem from="1622177811403" duration="1772000" />
       <workItem from="1622179650920" duration="5600000" />
+      <workItem from="1622213031970" duration="763000" />
+      <workItem from="1622237663216" duration="811000" />
+      <workItem from="1622239258211" duration="1280000" />
+      <workItem from="1622240608454" duration="2537000" />
     </task>
     <servers />
   </component>
