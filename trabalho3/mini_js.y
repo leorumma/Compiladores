@@ -30,33 +30,77 @@ vector<string> novo;
 
 %}
 
-%token NUM ID LET STR IF
+%token NUM ID LET STR IF ELSE WHILE FOR NEG MAIOR_IGUAL MENOR_IGUAL IGUAL DIFERENTE
+
+%right '='
+%nonassoc '<' '>' IGUAL MAIOR_IGUAL MENOR_IGUAL DIFERENTE
+%left '+' '-'
+%left '*' '/' '%'
+%left NEG
+%left '.'
+%left '{'
+%left '['
+%left '('
 
 %start S
 
 
 %%
 
-S   :   CMDs { imprime( resolve_enderecos($1.c)); }
+S   :   CMDs {
+            imprime(resolve_enderecos($1.c));
+        }
     ;
 
-CMDs    :   CMD ';' CMDs {$$.c = $1.c + $3.c; }
-        |   { $$.c = novo; }
+CMDs    :   CMD ';' CMDs {
+                $$.c = $1.c + $3.c; 
+            }
+
+        |   { 
+                $$.c = novo;
+            }
         ;
 
-CMD :   ATR {$$.c = $1.c + "^"; }
-    |   LET DECLVARs    {$$ = $2;}
-    |   IF  '(' R ')' CMD 
-        { string endif = gera_label( "end_if" );
-        $$.c = $3.c + "!" + endif + "?" + $5.c + (":" + endif); }
+CMD :   ATR {
+            $$.c = $1.c + "^"; 
+        }
+        
+    |   LET DECLVARs {
+            $$ = $2;
+        }
+
+    |   IF  '(' R ')' CMD {
+            string end = gera_label( "end_if" );
+            $$.c = $3.c + "!" + end + "?" + $5.c + (":" + end); 
+        }
+
+    |   IF '(' R ')' CMD ELSE CMD {
+            string then = gera_label("then_if");
+            string end = gera_label("end_if");
+            $$.c = $3.c + then + "?" + $7.c + end + "#" + (":" + then) + $5.c + (":" + end);
+        }
+
+    |   Varias_Atribuicoes
     ;
 
-DECLVARs : DECLVAR ',' DECLVARs {$$.c = $1.c + $3.c; }
+Varias_Atribuicoes : '{' CMDs '}' {$$.c = $2.c;}
+                   ;
+
+
+DECLVARs : DECLVAR ',' DECLVARs {
+                $$.c = $1.c + $3.c;
+            }
+
          | DECLVAR
          ;
 
-DECLVAR : ID '=' R { $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
-        | ID    {$$.c = $1.c + "&"; }
+DECLVAR : ID '=' R {
+                $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^";
+          }
+
+        | ID {
+            $$.c = $1.c + "&";
+          }
         ;
 
 ATR : ID '=' ATR {$$.c = $1.c + $3.c + "="; }
@@ -65,6 +109,10 @@ ATR : ID '=' ATR {$$.c = $1.c + $3.c + "="; }
 
 R   : E '<' E { $$.c = $1.c + $3.c + "<"; }
     | E '>' E { $$.c = $1.c + $3.c + ">"; }
+    | E IGUAL E { $$.c = $1.c + $3.c + "=="; }
+    | E MENOR_IGUAL E { $$.c = $1.c + $3.c + "<="; }
+    | E MAIOR_IGUAL E { $$.c = $1.c + $3.c + ">="; }
+    | E DIFERENTE E { $$.c = $1.c + $3.c + "!="; }
     | E
     ;
 
@@ -75,6 +123,7 @@ E   : E '+' T {$$.c = $1.c + $3.c + "+";}
 
 T   : T '*' F {$$.c = $1.c + $3.c + "*";}
     | T '/' F {$$.c = $1.c + $3.c + "/";}
+    | T '%' F {$$.c = $1.c + $3.c + "%";}
     | F
     ;
 
