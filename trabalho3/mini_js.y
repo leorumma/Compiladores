@@ -56,42 +56,51 @@ CMDs    :   CMD ';' CMDs {
                 $$.c = $1.c + $3.c; 
             }
 
+        | Sequencia CMDs {
+            $$.c = $1.c + $2.c;
+          }
+
         |   { 
                 $$.c = novo;
             }
         ;
 
-CMD :   ATR {
-            $$.c = $1.c + "^"; 
-        }
-        
-    |   LET DECLVARs {
-            $$ = $2;
-        }
-
-    |   IF  '(' R ')' CMD {
-            string end = gera_label( "end_if" );
-            $$.c = $3.c + "!" + end + "?" + $5.c + (":" + end); 
-        }
-
-    |   IF '(' R ')' CMD ELSE CMD {
-            string then = gera_label("then_if");
-            string end = gera_label("end_if");
-            $$.c = $3.c + then + "?" + $7.c + end + "#" + (":" + then) + $5.c + (":" + end);
-        }
-
-    |   Varias_Atribuicoes
+CMD : ATR          { $$.c = $1.c + "^"; }
+    | LET DECLVARs { $$ = $2; }
     ;
 
-Varias_Atribuicoes : '{' CMDs '}' {$$.c = $2.c;}
-                   ;
+Sequencia :   IF '(' R ')' BODY OPT_ELSE {
+            string then = gera_label("then_if");
+            string end = gera_label("end_if");
+            $$.c = $3.c + "!" + then + "?" + $5.c + end + "#" + (":" + then) + $6.c + (":" + end);
+        }
 
+    |   WHILE '(' E ')' CMD {
+    	  string end = gera_label("end_while");
+    	  string begin = gera_label("begin_while");
+    	  $$.c = novo + (":" + begin) + $3.c + "!" + end + "?" + $5.c + begin + "#" + (":" + end);
+       }
+    ;
+
+OPT_ELSE : ELSE BODY  { $$ = $2; }
+		 |            { $$.c = novo; }
+		 ;
+
+BODY : CMD ';'     { $$ = $1; }
+	 | BLOCK
+	 | Sequencia
+	 ;
+
+BLOCK : '{' CMDs '}' { $$ = $2; }
+	  ;
 
 DECLVARs : DECLVAR ',' DECLVARs {
                 $$.c = $1.c + $3.c;
             }
 
-         | DECLVAR
+         | DECLVAR {
+            $$ = $1;
+            }
          ;
 
 DECLVAR : ID '=' R {
